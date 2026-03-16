@@ -34,15 +34,16 @@ public class Main {
         IO.println(nonDeterministicClass.newInstance().overrideMe());
 
         //Create a new dynamic class during runtime, with a custom method
-        IO.println(String.format("Dynamic Class:"));
+        String methodName = "dynamicMethod" + r.nextInt(10);
+        IO.println(String.format("Dynamic Class with method " + methodName + ":"));
         Class<?> type = new ByteBuddy()
                 .subclass(Object.class)
                 .name("org.example.DynamicClass")
-                .defineMethod("dynamicMethod", String.class, Modifier.PUBLIC)
+                .defineMethod(methodName, String.class, Modifier.PUBLIC)
                 .intercept(FixedValue.value("Calling the dynamic method with random " + r.nextInt(100)))
                 .make()
                 .load(Main.class.getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
                 .getLoaded();
-        IO.println(type.getDeclaredMethod("dynamicMethod", null).invoke(type.newInstance()));
+        IO.println(type.getDeclaredMethod(methodName, null).invoke(type.newInstance()));
     }
 }
