@@ -1,7 +1,9 @@
 package org.example;
 
 import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.dynamic.loading.ClassReloadingStrategy;
 import net.bytebuddy.implementation.FixedValue;
 
 import java.lang.reflect.InvocationTargetException;
@@ -20,10 +22,11 @@ public class Main {
         plainClass.method();
 
         Random r = new Random();
-        //Change the method in NonDeterministicClass by the one on PlainClass
-        IO.println(String.format("NonDeterministicClass, method overrided:"));
+
+        IO.println(String.format("NonDeterministicClass, subclassed method overrided:"));
         var nonDeterministicClass = new ByteBuddy()
                 .subclass(NonDeterministicClass.class)
+                .name("org.example.NonDeterministicClassOverrided")
                 .method(named("overrideMe")
                         .and(isDeclaredBy(NonDeterministicClass.class)
                                 .and(returns(String.class))))
@@ -32,6 +35,19 @@ public class Main {
                 .load(Main.class.getClassLoader())
                 .getLoaded();
         IO.println(nonDeterministicClass.newInstance().overrideMe());
+
+        IO.println(String.format("RedefinedClass, method redefined:"));
+        ByteBuddyAgent.install();
+        new ByteBuddy()
+                .redefine(RedefinedClass.class)
+                .method(named("redefineMe")
+                        .and(isDeclaredBy(RedefinedClass.class)
+                                .and(returns(String.class))))
+                .intercept(FixedValue.value("Intercepted and redefined method with random " + r.nextInt(100)))
+                .make()
+                .load(RedefinedClass.class.getClassLoader(),
+                        ClassReloadingStrategy.fromInstalledAgent());
+        IO.println((new RedefinedClass()).redefineMe());
 
         //Create a new dynamic class during runtime, with a custom method
         String methodName = "dynamicMethod" + r.nextInt(10);
