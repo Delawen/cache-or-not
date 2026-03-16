@@ -6,6 +6,7 @@ import net.bytebuddy.implementation.FixedValue;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.Random;
 
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
@@ -14,11 +15,11 @@ public class Main {
         IO.println(String.format("Let's do some tricks!"));
 
         //First call the plain normal basic class
-
         IO.println(String.format("PlainClass:"));
         PlainClass plainClass = new PlainClass();
         plainClass.method();
 
+        Random r = new Random();
         //Change the method in NonDeterministicClass by the one on PlainClass
         IO.println(String.format("NonDeterministicClass, method overrided:"));
         var nonDeterministicClass = new ByteBuddy()
@@ -26,7 +27,7 @@ public class Main {
                 .method(named("overrideMe")
                         .and(isDeclaredBy(NonDeterministicClass.class)
                                 .and(returns(String.class))))
-                .intercept(FixedValue.value("Intercepted and overrided method."))
+                .intercept(FixedValue.value("Intercepted and overrided method with random " + r.nextInt(100)))
                 .make()
                 .load(Main.class.getClassLoader())
                 .getLoaded();
@@ -35,10 +36,10 @@ public class Main {
         //Create a new dynamic class during runtime, with a custom method
         IO.println(String.format("Dynamic Class:"));
         Class<?> type = new ByteBuddy()
-                .subclass(NonDeterministicClass.class)
-                .name("DynamicClass")
+                .subclass(Object.class)
+                .name("org.example.DynamicClass")
                 .defineMethod("dynamicMethod", String.class, Modifier.PUBLIC)
-                .intercept(FixedValue.value("Calling the dynamic method"))
+                .intercept(FixedValue.value("Calling the dynamic method with random " + r.nextInt(100)))
                 .make()
                 .load(Main.class.getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
                 .getLoaded();

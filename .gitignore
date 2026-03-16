@@ -1,4 +1,5 @@
 target/
+.leyden-analyzer.history/
 
 ### IntelliJ IDEA ###
 .idea/modules.xml
