@@ -14,52 +14,50 @@ import static net.bytebuddy.matcher.ElementMatchers.*;
 
 public class Main {
     static void main() throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
-        IO.println(String.format("Let's do some tricks!"));
 
         //First call the plain normal basic class
-        IO.println(String.format("PlainClass:"));
+        IO.println("PlainClass:");
         PlainClass plainClass = new PlainClass();
         plainClass.method();
 
         Random r = new Random();
 
-        IO.println(String.format("NonDeterministicClass, subclassed method overrided:"));
+        IO.println("NonDeterministicClass, subclassed as org.example.NonDeterministicClassOverrided and method overrided:");
         var nonDeterministicClass = new ByteBuddy()
                 .subclass(NonDeterministicClass.class)
                 .name("org.example.NonDeterministicClassOverrided")
                 .method(named("overrideMe")
                         .and(isDeclaredBy(NonDeterministicClass.class)
                                 .and(returns(String.class))))
-                .intercept(FixedValue.value("Intercepted and overrided method with random " + r.nextInt(100)))
+                .intercept(FixedValue.value(">> Executing intercepted and overrided method with random " + r.nextInt(100)))
                 .make()
                 .load(Main.class.getClassLoader())
                 .getLoaded();
         IO.println(nonDeterministicClass.newInstance().overrideMe());
 
-        IO.println(String.format("RedefinedClass, method redefined:"));
+        IO.println(String.format("RedefinedClass, method redefined and new dynamicMethod:"));
         ByteBuddyAgent.install();
         new ByteBuddy()
                 .redefine(RedefinedClass.class)
                 .method(named("redefineMe")
                         .and(isDeclaredBy(RedefinedClass.class)
                                 .and(returns(String.class))))
-                .intercept(FixedValue.value("Intercepted and redefined method with random " + r.nextInt(100)))
+                .intercept(FixedValue.value(">> Executing  intercepted and redefined method with random " + r.nextInt(100)))
                 .make()
                 .load(RedefinedClass.class.getClassLoader(),
                         ClassReloadingStrategy.fromInstalledAgent());
         IO.println((new RedefinedClass()).redefineMe());
 
         //Create a new dynamic class during runtime, with a custom method
-        String methodName = "dynamicMethod" + r.nextInt(10);
-        IO.println(String.format("Dynamic Class with method " + methodName + ":"));
+        IO.println(String.format("Dynamic Class:"));
         Class<?> type = new ByteBuddy()
                 .subclass(Object.class)
                 .name("org.example.DynamicClass")
-                .defineMethod(methodName, String.class, Modifier.PUBLIC)
-                .intercept(FixedValue.value("Calling the dynamic method with random " + r.nextInt(100)))
+                .defineMethod("dynamicMethod", String.class, Modifier.PUBLIC)
+                .intercept(FixedValue.value(">> Executing the dynamic method of DynamicClass with random " + r.nextInt(100)))
                 .make()
                 .load(Main.class.getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
                 .getLoaded();
-        IO.println(type.getDeclaredMethod(methodName, null).invoke(type.newInstance()));
+        IO.println(type.getDeclaredMethod("dynamicMethod", null).invoke(type.newInstance()));
     }
 }
