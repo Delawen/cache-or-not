@@ -2,8 +2,10 @@ package org.example;
 
 public class PlainClass {
 
+    public String message = "I'm just a simple plain class";
+
     void method() {
-        IO.println(String.format("I'm just a simple plain class"));
+        IO.println(message);
     }
 
     String anotherMethod() {
