@@ -13,7 +13,7 @@ import java.util.Random;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 public class Main {
-    static void main() throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    static void main() throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InterruptedException {
 
         //First call the plain normal basic class
         IO.println("PlainClass:");
@@ -50,14 +50,15 @@ public class Main {
 
         //Create a new dynamic class during runtime, with a custom method
         IO.println(String.format("Dynamic Class:"));
+        String methodName = "dynamicMethod" + r.nextInt(50);
         Class<?> type = new ByteBuddy()
                 .subclass(Object.class)
                 .name("org.example.DynamicClass")
-                .defineMethod("dynamicMethod", String.class, Modifier.PUBLIC)
-                .intercept(FixedValue.value(">> Executing the dynamic method of DynamicClass with random " + r.nextInt(100)))
+                .defineMethod(methodName, String.class, Modifier.PUBLIC)
+                .intercept(FixedValue.value(">> Executing the dynamic method (" + methodName + ")of DynamicClass with random " + r.nextInt(100)))
                 .make()
                 .load(Main.class.getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
                 .getLoaded();
-        IO.println(type.getDeclaredMethod("dynamicMethod", null).invoke(type.newInstance()));
+        IO.println(type.getDeclaredMethod(methodName, null).invoke(type.newInstance()));
     }
 }
