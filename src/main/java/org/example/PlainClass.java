@@ -2,7 +2,7 @@ package org.example;
 
 public class PlainClass {
 
-    public String message = "I'm just a simple plain class";
+    public String message = ">> I'm just a simple plain class";
 
     void method() {
         IO.println(message);
