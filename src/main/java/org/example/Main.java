@@ -13,6 +13,11 @@ import java.util.Random;
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
 public class Main {
+
+    private static Class<? extends NonDeterministicClass> nonDeterministicClass;
+    private static Class<?> dynamicClassType;
+
+
     static void main() throws InstantiationException, IllegalAccessException, NoSuchMethodException, InvocationTargetException, InterruptedException {
 
         //First call the plain normal basic class
@@ -23,7 +28,7 @@ public class Main {
         Random r = new Random();
 
         IO.println("NonDeterministicClass, subclassed as org.example.NonDeterministicClassOverrided and method overrided:");
-        var nonDeterministicClass = new ByteBuddy()
+        nonDeterministicClass = new ByteBuddy()
                 .subclass(NonDeterministicClass.class)
                 .name("org.example.NonDeterministicClassOverrided")
                 .method(named("overrideMe")
@@ -51,7 +56,7 @@ public class Main {
         //Create a new dynamic class during runtime, with a custom method
         IO.println(String.format("Dynamic Class:"));
         String methodName = "dynamicMethod" + r.nextInt(50);
-        Class<?> type = new ByteBuddy()
+        dynamicClassType = new ByteBuddy()
                 .subclass(Object.class)
                 .name("org.example.DynamicClass")
                 .defineMethod(methodName, String.class, Modifier.PUBLIC)
@@ -59,6 +64,6 @@ public class Main {
                 .make()
                 .load(Main.class.getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
                 .getLoaded();
-        IO.println(type.getDeclaredMethod(methodName, null).invoke(type.newInstance()));
+        IO.println(dynamicClassType.getDeclaredMethod(methodName, null).invoke(dynamicClassType.newInstance()));
     }
 }
